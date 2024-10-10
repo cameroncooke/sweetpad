@@ -271,6 +271,11 @@
         "icon": "$(sweetpad-player-play)"
       },
       {
+        "command": "sweetpad.build.launchWithDebug",
+        "title": "SweetPad: Build & Debug run (Launch)",
+        "icon": "$(debug-start)"
+      },
+      {
         "command": "sweetpad.build.run",
         "title": "SweetPad: Run (Without Build)",
         "icon": "$(play)"
@@ -488,15 +493,20 @@
           "group": "inline@1"
         },
         {
-          "command": "sweetpad.build.launch",
-          "when": "view == sweetpad.build.view",
-          "group": "inline@2"
-        },
-        {
           "command": "sweetpad.build.build",
           "when": "view == sweetpad.build.view",
           "group": "inline@1"
         },
+        {
+          "command": "sweetpad.build.launchWithDebug",
+          "when": "view == sweetpad.build.view",
+          "group": "inline@2"
+        },
+        {
+          "command": "sweetpad.build.launch",
+          "when": "view == sweetpad.build.view",
+          "group": "inline@3"
+        },        
         {
           "command": "sweetpad.build.test",
           "when": "view == sweetpad.build.view",

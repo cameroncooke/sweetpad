@@ -121,8 +121,8 @@ export function activate(context: vscode.ExtensionContext) {
   d(schemeStatusBar);
   d(tree("sweetpad.build.view", buildTreeProvider));
   d(command("sweetpad.build.refreshView", async () => buildManager.refresh()));
-  d(command("sweetpad.build.launch", launchCommand));
-  d(command("sweetpad.build.run", runCommand));
+  d(command("sweetpad.build.launch", (execution, item) => launchCommand(execution, item, false)));
+  d(command("sweetpad.build.launchWithDebug", (execution, item) => launchCommand(execution, item, true)));
   d(command("sweetpad.build.build", buildCommand));
   d(command("sweetpad.build.clean", cleanCommand));
   d(command("sweetpad.build.test", testCommand));

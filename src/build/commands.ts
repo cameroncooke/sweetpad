@@ -57,6 +57,7 @@ export async function runOnMac(
     xcworkspace: string;
     configuration: string;
     watchMarker: boolean;
+    debug: boolean;
   },
 ) {
   const buildSettings = await getBuildSettings({
@@ -73,18 +74,22 @@ export async function runOnMac(
     writeWatchMarkers(terminal);
   }
 
-  const executablePath = buildSettings.executablePath;
-  const debugConfiguration: vscode.DebugConfiguration = {
-    type: "sweetpad-lldb",
-    request: "launch",
-    name: "Debug on Mac",
-    program: executablePath,
-  };
+  if (options.debug) {
+    const debugConfiguration: vscode.DebugConfiguration = {
+      type: "sweetpad-lldb",
+      request: "launch",
+      name: "Debug on Mac",
+      program: executablePath
+    };
 
-  const started = await vscode.debug.startDebugging(undefined, debugConfiguration);
-
-  if (!started) {
-    throw new Error("Failed to start debugging session");
+    const started = await vscode.debug.startDebugging(undefined, debugConfiguration);
+    if (!started) {
+      throw new Error("Failed to start debugging session");
+    }
+  } else {
+    await terminal.execute({
+      command: buildSettings.executablePath
+    });
   }
 }
 
@@ -98,6 +103,7 @@ export async function runOniOSSimulator(
     configuration: string;
     xcworkspace: string;
     watchMarker: boolean;
+    debug: boolean;
   },
 ) {
   const buildSettings = await getBuildSettings({
@@ -143,11 +149,29 @@ export async function runOniOSSimulator(
     writeWatchMarkers(terminal);
   }
 
-  // Run app
-  await terminal.execute({
-    command: "xcrun",
-    args: ["simctl", "launch", "--console-pty", "--terminate-running-process", simulator.udid, bundlerId],
-  });
+  if (options.debug) {
+    const debugConfiguration: vscode.DebugConfiguration = {
+      type: "sweetpad-lldb",
+      request: "launch",
+      name: "Debug on iOS Simulator",
+      program: appPath,
+      initCommands: [
+        `process launch -n "${appPath}" --wait-for`,
+      ],
+    };
+
+    const started = await vscode.debug.startDebugging(undefined, debugConfiguration);
+
+    if (!started) {
+      throw new Error("Failed to start debugging session");
+    }
+  } else {
+    // Run app
+    await terminal.execute({
+      command: "xcrun",
+      args: ["simctl", "launch", "--console-pty", "--terminate-running-process", simulator.udid, bundlerId],
+    });
+  }
 }
 
 export async function runOniOSDevice(
@@ -352,7 +376,7 @@ export async function buildCommand(execution: CommandExecution, item?: BuildTree
 /**
  * Build and run application on the simulator or device
  */
-export async function launchCommand(execution: CommandExecution, item?: BuildTreeItem) {
+export async function launchCommand(execution: CommandExecution, item?: BuildTreeItem, debug: boolean = false) {
   const xcworkspace = await askXcodeWorkspacePath(execution.context);
 
   const scheme =
@@ -393,6 +417,7 @@ export async function launchCommand(execution: CommandExecution, item?: BuildTre
           xcworkspace: xcworkspace,
           configuration: configuration,
           watchMarker: false,
+          debug: debug,
         });
       } else if (destination.type === "iOSSimulator" || destination.type === "watchOSSimulator") {
         await runOniOSSimulator(execution.context, terminal, {
@@ -402,6 +427,7 @@ export async function launchCommand(execution: CommandExecution, item?: BuildTre
           configuration: configuration,
           xcworkspace: xcworkspace,
           watchMarker: false,
+          debug: debug,
         });
       } else if (destination.type === "iOSDevice") {
         await runOniOSDevice(execution.context, terminal, {
@@ -450,6 +476,7 @@ export async function runCommand(execution: CommandExecution, item?: BuildTreeIt
           xcworkspace: xcworkspace,
           configuration: configuration,
           watchMarker: false,
+          debug: false,
         });
       } else if (destination.type === "iOSSimulator" || destination.type === "watchOSSimulator") {
         await runOniOSSimulator(execution.context, terminal, {
@@ -459,6 +486,7 @@ export async function runCommand(execution: CommandExecution, item?: BuildTreeIt
           configuration: configuration,
           xcworkspace: xcworkspace,
           watchMarker: false,
+          debug: false,
         });
       } else if (destination.type === "iOSDevice") {
         await runOniOSDevice(execution.context, terminal, {
